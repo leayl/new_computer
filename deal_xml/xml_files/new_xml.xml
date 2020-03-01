@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<countries>
+<country name="country0">
+<rank>1</rank>
+<neighbor area="area1">аз╬с1</neighbor>
+</country>
+<country name="country1">
+<rank>2</rank>
+<neighbor area="area2">аз╬с2</neighbor>
+</country>
+<country name="country2">
+<rank>3</rank>
+<neighbor area="area3">аз╬с3</neighbor>
+</country>
+<country name="country3">
+<rank>4</rank>
+<neighbor area="area4">аз╬с4</neighbor>
+</country>
+<country name="country4">
+<rank>5</rank>
+<neighbor area="area5">аз╬с5</neighbor>
+</country>
+</countries>
