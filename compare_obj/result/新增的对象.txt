@@ -1,0 +1,14 @@
+  |--id=6
+  |--name=name6
+  |--age=6
+  |--gender=
+  |--color=pnk
+
+
+  |--id=20
+  |--name=name20
+  |--gender=man
+  |--color=green
+  |--music=sunset......
+
+

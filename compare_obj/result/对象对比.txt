@@ -1,0 +1,22 @@
+  |--id=3                                 |--id=3
+  |--name=name3                           |--name=name3
+  |--age=55                               |--age=20
+  |--gender=man                           |--gender=man
+  |--color=black                          |--color=black
+  |-- =                                   |--area=America
+
+
+  |--id=1                                 |--id=1
+  |--name=name1                           |--name=name111
+  |--age=11                               |--age=16
+  |--gender=woman                         |--gender=woman
+  |--color=blue                           |--color=blue:pink:ooo
+
+
+  |--id=4                                 |--id=4
+  |--name=name4                           |--name=name4
+  |--age=2                                |-- =
+  |--gender=man                           |-- =
+  |--color=orange                         |--color=
+
+
