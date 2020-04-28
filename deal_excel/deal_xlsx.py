@@ -6,6 +6,8 @@ import datetime
 from copy import copy
 
 import openpyxl
+from openpyxl.styles import numbers
+from openpyxl.cell import WriteOnlyCell
 
 
 def read_xlsx(filepath):
@@ -110,10 +112,126 @@ def copy_temp_xlsx(filepath):
     wb.save(filepath)
 
 
+num_format = numbers.FORMAT_NUMBER
+pdf_format = numbers.FORMAT_PERCENTAGE_00
+
+
+def set_row_data(cell_lis, ws, row, data_lis, string_lis):
+    for index, data in enumerate(data_lis):
+        col = index * 3 + 4
+        cell_num = WriteOnlyCell(ws, data)
+        cell_num.number_format = num_format  # 单元格值设置为数字
+        # ws[f"{string_lis[col - 1]}{row}"].number_format = num_format  # 单元格值设置为数字
+        # ws[f"{string_lis[col - 1]}{row}"].value = data  # 单元格值
+        cell_pdf = WriteOnlyCell(ws, f"={string_lis[col - 1]}{row}/{string_lis[col - 1]}2")
+        cell_pdf.number_format = pdf_format  # 当前所占百分比设置为百分数
+        # ws[f"{string_lis[col]}{row}"].number_format = pdf_format  # 当前所占百分比设置为百分数
+        # ws[f"{string_lis[col]}{row}"].value = f"={string_lis[col - 1]}{row}/{string_lis[col - 1]}2"  # 当前所占百分比
+        # ws[f"{string_lis[col + 1]}{row}"].number_format = pdf_format  # 累计百分比设置为百分数
+        if row == 3:
+            cell_cdf = WriteOnlyCell(ws, f"={string_lis[col]}{row}")
+            # ws[f"{string_lis[col + 1]}{row}"].value = f"={string_lis[col]}{row}"  # 第一条数据的累计百分比
+
+        else:
+            cell_cdf = WriteOnlyCell(ws, f"={string_lis[col]}{row}+{string_lis[col + 1]}{row - 1}")
+            # ws[
+            #     f"{string_lis[col + 1]}{row}"].value = f"={string_lis[col]}{row}+{string_lis[col + 1]}{row - 1}"  # 当前累计百分比
+        cell_cdf.number_format = pdf_format  # 当前所占百分比设置为百分数
+        cell_lis.append(cell_num)
+        cell_lis.append(cell_pdf)
+        cell_lis.append(cell_cdf)
+    ws.append(cell_lis)
+
+
+def create_pdf_xlsx():
+    import string
+    string_lis = list(string.ascii_uppercase)
+    wb = openpyxl.Workbook(write_only=True)
+    ws = wb.active
+    header = ["序号", "callid", "enid", "参数一", "PDF", "CDF", "参数二", "PDF", "CDF", "参数三", "PDF", "CDF", "参数死四", "PDF",
+              "CDF"]
+    ws.append(header)
+    ws.cell(2, 1).value = "汇总"
+    ws.merge_cells("A2:C2")
+    for i in range(4):
+        col = i * 3 + 4
+        ws[f"{string_lis[col - 1]}2"].number_format = num_format  # 总和格式
+        ws[f"{string_lis[col - 1]}2"].value = 0  # 更新总和值
+        ws[f"{string_lis[col]}2"].number_format = pdf_format  # 总和百分比
+        ws[f"{string_lis[col]}2"].value = 1
+        ws[f"{string_lis[col + 1]}2"].number_format = pdf_format  # 总累计百分比
+    for i in range(2 ** 20):
+        data = [i, i + 1, i + 2, i + 3]
+        row = i + 3
+        ws.cell(row, 2).value = f"callid_{i + 1}"
+        ws.cell(row, 3).value = f"ENid_{i + 1}"
+        set_row_data(ws, row, data, string_lis)
+    nrow = ws.max_row
+    for i in range(4):
+        col = i * 3 + 4
+        ws[f"{string_lis[col - 1]}2"].value = f"=SUM({string_lis[col - 1]}3:{string_lis[col - 1]}{nrow})"  # 更新总和值
+    wb.save("excel_ouput/pdf_xlsx.xlsx")
+
+
+def create_pdf_readonly_xlsx():
+    import string
+    string_lis = list(string.ascii_uppercase)
+    wb = openpyxl.Workbook(write_only=True)
+    ws = wb.create_sheet()
+    header = ["序号", "callid", "enid", "参数一", "PDF", "CDF", "参数二", "PDF", "CDF", "参数三", "PDF", "CDF", "参数死四", "PDF",
+              "CDF"]
+    ws.append(header)
+    # ws.cell(2, 1).value = "汇总"
+    # ws.merge_cells("A2:C2")
+    row_1 = ["汇总", "", ""]
+    for i in range(4):
+        col = i * 3 + 4
+        total_cell = WriteOnlyCell(ws, f"=SUM({string_lis[col - 1]}3:{string_lis[col - 1]}1048576)")
+        total_cell.number_format = num_format  # 总和格式
+        total_pdf_cell = WriteOnlyCell(ws, 1)
+        total_pdf_cell.number_format = pdf_format  # 总和百分比
+        total_cdf_cell = WriteOnlyCell(ws, 1)
+        total_cdf_cell.number_format = pdf_format  # 总累计百分比
+        row_1.append(total_cell)
+        row_1.append(total_pdf_cell)
+        row_1.append(total_cdf_cell)
+    ws.append(row_1)
+    for i in range(2 ** 20):
+        data = [i, i + 1, i + 2, i + 3]
+        row = i + 3
+        cell_lis = ['', f"callid_{i + 1}", f"ENid_{i + 1}"]
+        set_row_data(cell_lis, ws, row, data, string_lis)
+    # nrow = ws.max_row
+    # for i in range(4):
+    #     col = i * 3 + 4
+    #     ws[f"{string_lis[col - 1]}2"].value = f"=SUM({string_lis[col - 1]}3:{string_lis[col - 1]}{nrow})"  # 更新总和值
+    wb.save("excel_ouput/pdf_xlsx.xlsx")
+
+
+def read_only():
+    wb = openpyxl.Workbook(write_only=True)
+    ws = wb.create_sheet()
+
+    cell_total = WriteOnlyCell(ws, "=SUM(A2:A1048576)")
+    cell_total.number_format = num_format
+    cell_str = WriteOnlyCell(ws, "")
+    ws.append([cell_total, cell_str])
+
+    for i in range(2 ** 20 - 1):
+        cell_cur = WriteOnlyCell(ws, i)
+        cell_cur.number_format = num_format
+        cell_pdf = WriteOnlyCell(ws, F"=A{i + 2}/A1")
+        cell_pdf.number_format = pdf_format
+        ws.append([cell_cur, cell_pdf])
+    wb.save("ohmygod.xlsx")
+
+
 if __name__ == '__main__':
-    filepath = "excel_ouput/temp_xlsx.xlsx"
-    new_path = "excel_ouput/new_xlsx.xlsx"
+    # filepath = "excel_ouput/temp_xlsx.xlsx"
+    # new_path = "excel_ouput/new_xlsx.xlsx"
     # read_xlsx(filepath)
     # create_xlsx(new_path)
-    modify_xlsx(filepath)
+    # modify_xlsx(filepath)
     # copy_temp_xlsx(filepath)
+    create_pdf_readonly_xlsx()
+    # read_only()
